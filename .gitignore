@@ -1,2 +1,8 @@
-*.class
 *.log
+#SBT:
+target/
+#IntelliJ IDEA:
+/.idea/
+#ScalaIDE (Eclipse):
+/.classpath
+/.project

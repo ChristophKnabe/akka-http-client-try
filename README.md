@@ -1,6 +1,6 @@
 # Akka HTTP Client Try #
 
-Requests one web page by Akka Actors and Akka Streams, then displays the HTML source code of it.
+Requests one web page by Akka Actors and Akka HTTP, consumes the response by Akka Streams, and displays the HTML source code of it.
 
 ## Contribution policy ##
 
@@ -22,5 +22,5 @@ This code is open source software licensed under the [Apache 2.0 License]("http:
 `sbt run` 
 
 This will request the page at the fixed URL, and print its source text.
-A Reactive Stream is used when scanning the web page, as it could be very long. This occurs in method `ClientActor.receive` by `entity.dataBytes`.
+A Reactive Stream is used when scanning the web page, as the page could be very long. This occurs in method `ClientActor.receive` by `entity.dataBytes`.
 

@@ -14,7 +14,7 @@ object WebClientApp extends App {
   import java.net.{URL, URLConnection}
   import javax.net.ssl.SSLException
 
-  val uriArg = "https://www.berlin.de/" //"http://akka.io"
+  def uriArg = "https://www.berlin.de/" //"http://akka.io"
 
   _adjustTrustStorePassword(uriArg)
 
@@ -62,31 +62,31 @@ class ClientActor extends Actor with ActorLogging {
 
   override def preStart(): Unit = {
     http.singleRequest(HttpRequest(uri = uri)).pipeTo(self)
-    println(s"GET request $uri started.")
+    log.info("Connecting to {} ...", uri.authority)
   }
 
   def receive: Actor.Receive = {
-    case HttpResponse(StatusCodes.OK, headers, entity, _) =>
+    case HttpResponse(StatusCodes.OK, _, entity, _) =>
       log.info("Getting page {} ...", uri)
       entity.dataBytes.
         runForeach {
           chunk =>
             println("====================================Got response chunk====================================\n" + chunk.utf8String)
         }.onComplete {
-          case Success(done) =>
-            log.info("GET request {} completed within {} millis.", uri, elapsedMillis)
+          case Success(_) =>
+            log.info("GET request {} succeeded within {} millis.", uri, elapsedMillis)
             _terminate()
           case Failure(t) =>
             log.error("GET request {} dataBytes read completed with Failure {} within {} millis.", uri, t, elapsedMillis)
             _terminate()
         }
     case resp @ HttpResponse(code, _, _, _) =>
-      log.info("Request failed, response code: " + code)
+      log.info("GET request {} failed with response code {} within {} millis.", uri, code, elapsedMillis)
       resp.discardEntityBytes()
       _terminate()
 
     case unexpected =>
-      log.error("GET request {} was answered by unexpected message {}", uri, unexpected)
+      log.error("GET request {} was answered by unexpected message {} within {} millis.", uri, unexpected, elapsedMillis)
       _terminate()
   }
 
@@ -94,7 +94,6 @@ class ClientActor extends Actor with ActorLogging {
 
   private def _terminate(): Unit = {
     val system = context.system
-    import system.dispatcher
     log.info("Shut down all HTTP connection pools...")
     for {
       _ <- http.shutdownAllConnectionPools()
